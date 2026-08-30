@@ -35,3 +35,30 @@ body{min-height:100vh;display:flex;align-items:center;justify-content:center;pad
   object-position: center;
   border-radius: inherit;
 }
+
+
+/* App-icon sized Bidamax brand mark */
+.brand-mark {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  flex: 0 0 56px !important;
+  border-radius: 14px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.brand-mark img {
+  width: 56px !important;
+  height: 56px !important;
+  max-width: none !important;
+  max-height: none !important;
+  display: block !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  border-radius: 14px !important;
+}
+
