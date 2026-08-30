@@ -7,7 +7,7 @@ const {
 
 const SHORTLINK_URL =
   process.env.VOUCHER_SHORTLINK_URL ||
-  "https://earn4link.in/IPuIw";
+  "https://earn4link.in/fxSdsQ";
 
 module.exports = async function handler(req,res) {
   if (req.method !== "GET") {
