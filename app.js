@@ -24,7 +24,9 @@
     }catch(e){}
   }
 
-  var GATE_PAGE_USE_KEY = "bidamax_gate_page_used_v8";
+  // This flag exists only for the CURRENT loaded document.
+  // It does not survive refresh, reopening, or a new page load.
+  var currentDocumentGateAllowed = false;
 
   function isFreshGateReturn(){
     try{
@@ -33,15 +35,6 @@
     }catch(e){
       return false;
     }
-  }
-
-  function markGatePageUsed(){
-    try{ sessionStorage.setItem(GATE_PAGE_USE_KEY,"1"); }catch(e){}
-  }
-
-  function gatePageAlreadyUsed(){
-    try{ return sessionStorage.getItem(GATE_PAGE_USE_KEY) === "1"; }
-    catch(e){ return false; }
   }
 
   function randomHex(bytes){
@@ -223,9 +216,12 @@
     // Active voucher holders do not need the shortlink again until expiry.
     if(localVoucherIsActive()) return true;
 
-    // Only the immediate page returned from gate-unlock may use this pass.
-    // Refresh/back/direct reopen before generation requires Earn4Link again.
-    if(!isFreshGateReturn() || gatePageAlreadyUsed()){
+    // Once THIS currently loaded document was validated, let it stay open.
+    if(currentDocumentGateAllowed) return true;
+
+    // A new document must come directly from gate-unlock.
+    // Refresh/direct reopen has no ?gate=unlocked, so it goes back to Earn4Link.
+    if(!isFreshGateReturn()){
       openShortlinkGate();
       return false;
     }
@@ -237,8 +233,10 @@
       return false;
     }
 
-    markGatePageUsed();
+    currentDocumentGateAllowed = true;
 
+    // Hide the unlock query from the visible URL without reloading.
+    // The in-memory flag keeps this CURRENT document unlocked.
     try{
       history.replaceState(null,"",window.location.pathname);
     }catch(e){}
@@ -347,17 +345,21 @@
     }
   })();
 
-  // Re-check after browser Back / forward-cache restore.
-  window.addEventListener("pageshow",function(){
+  // Only re-check when an OLD page is restored from browser back/forward cache.
+  // Normal first load also fires pageshow, so do not treat that as a new gate attempt.
+  window.addEventListener("pageshow",function(event){
+    if(!event || !event.persisted) return;
+
     setTimeout(function(){
       if(localVoucherIsActive()){
         revealGenerator();
         return;
       }
 
-      enforceGateWhenNeeded().then(function(allowed){
-        if(allowed) revealGenerator();
-      });
+      // Returning to an older cached generator page without an active voucher
+      // must pass through Earn4Link again.
+      currentDocumentGateAllowed = false;
+      openShortlinkGate();
     },40);
   });
 })();
